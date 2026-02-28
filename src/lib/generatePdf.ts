@@ -133,7 +133,7 @@ export async function generatePdf(data: FormData, logoBase64: string | null) {
 
   // === VALORES E PAGAMENTO ===
   drawHeader("Valores e Pagamento");
-  drawTwoColumns("Valor da Peça", data.valorPeca, "Valor Pago", data.valorPago);
+  drawTwoColumns("Valor da Peça", data.valorPeca, "Valor total", data.valorPago);
   drawRow("Forma de Pag.", data.formaPagamento, 40);
 
   // === FOTOS ===

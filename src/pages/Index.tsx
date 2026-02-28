@@ -182,7 +182,7 @@ const Index = () => {
                   <Input className={fieldClass} placeholder="R$ 0,00" value={valorPeca} onChange={(e) => setValorPeca(e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor Pago</Label>
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor total</Label>
                   <Input className={fieldClass} placeholder="R$ 0,00" value={valorPago} onChange={(e) => setValorPago(e.target.value)} />
                 </div>
               </div>
