@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,105 +7,46 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  MapPin,
-  Plus,
-  Trash2,
   FileDown,
-  Building2,
+  User,
   Wrench,
-  ClipboardList,
-  AlertTriangle,
+  DollarSign,
   Camera,
   PenTool,
-  Settings,
 } from "lucide-react";
 import SignatureCanvas from "@/components/SignatureCanvas";
 import PhotoUpload from "@/components/PhotoUpload";
-import ChecklistItem from "@/components/ChecklistItem";
 import { generatePdf, type FormData } from "@/lib/generatePdf";
 import { useToast } from "@/hooks/use-toast";
 import cruztechLogo from "@/assets/cruztech-logo.jpg";
 
-const INITIAL_EQUIPAMENTO = { nome: "", marca: "", modelo: "", numSerie: "", informacoes: "" };
+// === DEFINA SUAS CORES DO LOGO AQUI (HEX) ===
+const COLORS = {
+  primary: "#0A4B5E", // Azul Petróleo
+  accent: "#F9A826", // Laranja Vibrante
+  text: "#1A1A1A", // Texto Principal
+  background: "#F0F8FA", // Um tom muito claro de azul
+};
 
 const Index = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Form state
-  const [clienteNome, setClienteNome] = useState("");
-  const [clienteEmail, setClienteEmail] = useState("");
-  const [razaoSocial, setRazaoSocial] = useState("");
-  const [cnpj, setCnpj] = useState("");
-  const [endereco, setEndereco] = useState("");
-  const [infoAdicionais, setInfoAdicionais] = useState("");
-
-  const [tipoServico, setTipoServico] = useState("");
-  const [kmVeiculo, setKmVeiculo] = useState("");
-  const [localizacaoGps, setLocalizacaoGps] = useState("");
-  const [gpsLoading, setGpsLoading] = useState(false);
-
-  const [equipamentos, setEquipamentos] = useState([{ ...INITIAL_EQUIPAMENTO }]);
-
-  const [mesReferencia, setMesReferencia] = useState("");
-  const [periodo, setPeriodo] = useState("");
-  const [checklist, setChecklist] = useState({
-    filtrosAr: {
-      limparElementos: null as "conforme" | "nao_conforme" | null,
-      verificarFixacao: null as "conforme" | "nao_conforme" | null,
-    },
-    gabinetes: {
-      verificarRenovacao: null as "conforme" | "nao_conforme" | null,
-      verificarBotoeiras: null as "conforme" | "nao_conforme" | null,
-    },
-  });
-
-  const [problemaIdentificado, setProblemaIdentificado] = useState("");
-  const [servicoRealizado, setServicoRealizado] = useState("");
+  // Form states
+  const [nomeCliente, setNomeCliente] = useState("");
+  const [marca, setMarca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [numSerie, setNumSerie] = useState("");
+  const [pecaTrocada, setPecaTrocada] = useState("");
+  const [pecaAtencao, setPecaAtencao] = useState("");
+  const [valorPeca, setValorPeca] = useState("");
+  const [valorPago, setValorPago] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState("");
+  
   const [fotos, setFotos] = useState<string[]>([]);
   const [assinatura, setAssinatura] = useState<string | null>(null);
-
-  const getGpsLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast({ title: "GPS não disponível", description: "Seu navegador não suporta geolocalização.", variant: "destructive" });
-      return;
-    }
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-        setLocalizacaoGps(coords);
-        setGpsLoading(false);
-        toast({ title: "Localização obtida!", description: coords });
-      },
-      () => {
-        setGpsLoading(false);
-        toast({ title: "Erro ao obter GPS", description: "Permita o acesso à localização.", variant: "destructive" });
-      },
-      { enableHighAccuracy: true }
-    );
-  }, [toast]);
-
-  const addEquipamento = () => setEquipamentos([...equipamentos, { ...INITIAL_EQUIPAMENTO }]);
-  const removeEquipamento = (i: number) => {
-    if (equipamentos.length <= 1) return;
-    setEquipamentos(equipamentos.filter((_, idx) => idx !== i));
-  };
-  const updateEquipamento = (i: number, field: string, value: string) => {
-    const updated = [...equipamentos];
-    (updated[i] as any)[field] = value;
-    setEquipamentos(updated);
-  };
 
   const getLogoBase64 = (): Promise<string | null> => {
     return new Promise((resolve) => {
@@ -133,10 +74,17 @@ const Index = () => {
     try {
       const logoBase64 = await getLogoBase64();
       const formData: FormData = {
-        clienteNome, clienteEmail, razaoSocial, cnpj, endereco, infoAdicionais,
-        tipoServico, kmVeiculo, localizacaoGps,
-        equipamentos, mesReferencia, periodo, checklist,
-        problemaIdentificado, servicoRealizado, fotos, assinatura,
+        nomeCliente,
+        marca,
+        modelo,
+        numSerie,
+        pecaTrocada,
+        pecaAtencao,
+        valorPeca,
+        valorPago,
+        formaPagamento,
+        fotos,
+        assinatura,
       };
       await generatePdf(formData, logoBase64);
       toast({ title: "PDF gerado com sucesso!", description: "O download deve iniciar automaticamente." });
@@ -150,211 +98,107 @@ const Index = () => {
   const fieldClass = "mt-1.5";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.background, color: COLORS.text }}>
+      {/* Header com cor primária e destaque */}
+      <header className="sticky top-0 z-50 shadow-lg" style={{ backgroundColor: COLORS.primary, color: "#fff" }}>
         <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
-          <img src={cruztechLogo} alt="Cruztech" className="h-10 w-10 rounded-lg object-cover bg-primary-foreground/10" />
-          <div>
+          <img src={cruztechLogo} alt="Cruztech" className="h-10 w-10 rounded-lg object-cover bg-white/10" />
+          <div className="grow">
             <h1 className="text-base font-bold leading-tight">Cruztech Assistência</h1>
-            <p className="text-xs text-primary-foreground/70">Relatório de Visita Técnica / PMOC</p>
+            <p className="text-xs text-white/70">CNPJ: 63.087.545/0001-05</p>
           </div>
+          {/* Um detalhe na cor de destaque */}
+          <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: COLORS.accent }}></div>
         </div>
       </header>
 
       {/* Form */}
       <main className="max-w-lg mx-auto px-4 py-4 pb-32">
-        <Accordion type="multiple" defaultValue={["cliente"]} className="space-y-3">
+        <Accordion type="multiple" defaultValue={["cliente", "equipamento", "servico", "fotos", "aprovacao"]} className="space-y-3">
 
-          {/* 1. Cliente e Empresa */}
+          {/* 1. Cliente */}
           <AccordionItem value="cliente" className="border rounded-xl overflow-hidden bg-card shadow-sm">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <Building2 className="h-4 w-4 text-primary" />
-                Cliente e Empresa
+              <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary }}>
+                <User className="h-4 w-4" style={{ color: COLORS.primary }} />
+                Cliente
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-3">
               <div>
-                <Label className="text-xs">Nome</Label>
-                <Input className={fieldClass} placeholder="Nome do cliente" value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">E-mail</Label>
-                <Input className={fieldClass} type="email" placeholder="email@exemplo.com" value={clienteEmail} onChange={(e) => setClienteEmail(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Razão Social</Label>
-                <Input className={fieldClass} placeholder="Razão Social" value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">CNPJ</Label>
-                <Input className={fieldClass} placeholder="00.000.000/0000-00" value={cnpj} onChange={(e) => setCnpj(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Endereço</Label>
-                <Input className={fieldClass} placeholder="Endereço completo" value={endereco} onChange={(e) => setEndereco(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Informações adicionais</Label>
-                <Input className={fieldClass} placeholder="Ex: Síndico Marcelo" value={infoAdicionais} onChange={(e) => setInfoAdicionais(e.target.value)} />
+                <Label className="text-xs" style={{ color: COLORS.primary }}>Nome do Cliente</Label>
+                <Input className={fieldClass} placeholder="Nome completo" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} />
               </div>
             </AccordionContent>
           </AccordionItem>
 
-          {/* 2. Informações Gerais */}
-          <AccordionItem value="info" className="border rounded-xl overflow-hidden bg-card shadow-sm">
+          {/* 2. Equipamento */}
+          <AccordionItem value="equipamento" className="border rounded-xl overflow-hidden bg-card shadow-sm">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <Settings className="h-4 w-4 text-primary" />
-                Informações Gerais
+              <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary }}>
+                <Wrench className="h-4 w-4" style={{ color: COLORS.primary }} />
+                Equipamento
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-3">
-              <div>
-                <Label className="text-xs">Tipo de Serviço</Label>
-                <Select value={tipoServico} onValueChange={setTipoServico}>
-                  <SelectTrigger className={fieldClass}>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Instalação">Instalação</SelectItem>
-                    <SelectItem value="Manutenção Preventiva">Manutenção Preventiva</SelectItem>
-                    <SelectItem value="Manutenção Corretiva">Manutenção Corretiva</SelectItem>
-                    <SelectItem value="Visita Técnica">Visita Técnica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Km do Veículo</Label>
-                <Input className={fieldClass} placeholder="Ex: 45.230" value={kmVeiculo} onChange={(e) => setKmVeiculo(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Localização GPS</Label>
-                <div className="flex gap-2 mt-1.5">
-                  <Input className="flex-1" placeholder="Latitude, Longitude" value={localizacaoGps} onChange={(e) => setLocalizacaoGps(e.target.value)} readOnly />
-                  <Button type="button" size="sm" onClick={getGpsLocation} disabled={gpsLoading} className="shrink-0">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {gpsLoading ? "..." : "GPS"}
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 3. Lista de Ativos */}
-          <AccordionItem value="ativos" className="border rounded-xl overflow-hidden bg-card shadow-sm">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <Wrench className="h-4 w-4 text-primary" />
-                Lista de Ativos ({equipamentos.length})
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 space-y-4">
-              {equipamentos.map((eq, i) => (
-                <div key={i} className="rounded-lg border bg-secondary/30 p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">Equipamento {i + 1}</span>
-                    {equipamentos.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeEquipamento(i)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                  <Input placeholder="Nome" value={eq.nome} onChange={(e) => updateEquipamento(i, "nome", e.target.value)} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="Marca" value={eq.marca} onChange={(e) => updateEquipamento(i, "marca", e.target.value)} />
-                    <Input placeholder="Modelo" value={eq.modelo} onChange={(e) => updateEquipamento(i, "modelo", e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="Nº de série" value={eq.numSerie} onChange={(e) => updateEquipamento(i, "numSerie", e.target.value)} />
-                    <Input placeholder="Info (ex: BTUs)" value={eq.informacoes} onChange={(e) => updateEquipamento(i, "informacoes", e.target.value)} />
-                  </div>
-                </div>
-              ))}
-              <Button type="button" variant="outline" className="w-full" onClick={addEquipamento}>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Equipamento
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 4. Preventiva PMOC */}
-          <AccordionItem value="pmoc" className="border rounded-xl overflow-hidden bg-card shadow-sm">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <ClipboardList className="h-4 w-4 text-primary" />
-                Preventiva PMOC
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Mês de Referência</Label>
-                  <Input className={fieldClass} placeholder="Ex: Março" value={mesReferencia} onChange={(e) => setMesReferencia(e.target.value)} />
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Marca</Label>
+                  <Input className={fieldClass} placeholder="Ex: Samsung" value={marca} onChange={(e) => setMarca(e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-xs">Período</Label>
-                  <Input className={fieldClass} placeholder="Ex: Mensal" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Modelo</Label>
+                  <Input className={fieldClass} placeholder="Ex: Inverter" value={modelo} onChange={(e) => setModelo(e.target.value)} />
                 </div>
               </div>
-
               <div>
-                <h4 className="text-xs font-bold text-primary mb-1">FILTROS DE AR</h4>
-                <ChecklistItem
-                  label="Limpar os elementos filtrantes e substituir em caso de avarias"
-                  value={checklist.filtrosAr.limparElementos}
-                  onChange={(v) => setChecklist({ ...checklist, filtrosAr: { ...checklist.filtrosAr, limparElementos: v } })}
-                />
-                <ChecklistItem
-                  label="Verificar a fixação, corrigir o ajuste da moldura se necessário"
-                  value={checklist.filtrosAr.verificarFixacao}
-                  onChange={(v) => setChecklist({ ...checklist, filtrosAr: { ...checklist.filtrosAr, verificarFixacao: v } })}
-                />
-              </div>
-
-              <div>
-                <h4 className="text-xs font-bold text-primary mb-1">GABINETES</h4>
-                <ChecklistItem
-                  label="Verificar o mecanismo de renovação de ar"
-                  value={checklist.gabinetes.verificarRenovacao}
-                  onChange={(v) => setChecklist({ ...checklist, gabinetes: { ...checklist.gabinetes, verificarRenovacao: v } })}
-                />
-                <ChecklistItem
-                  label="Verificar botoeiras, knobs, etc. e repor, se necessário"
-                  value={checklist.gabinetes.verificarBotoeiras}
-                  onChange={(v) => setChecklist({ ...checklist, gabinetes: { ...checklist.gabinetes, verificarBotoeiras: v } })}
-                />
+                <Label className="text-xs" style={{ color: COLORS.primary }}>N° Série</Label>
+                <Input className={fieldClass} placeholder="Número de série" value={numSerie} onChange={(e) => setNumSerie(e.target.value)} />
               </div>
             </AccordionContent>
           </AccordionItem>
 
-          {/* 5. Ocorrência */}
-          <AccordionItem value="ocorrencia" className="border rounded-xl overflow-hidden bg-card shadow-sm">
+          {/* 3. Serviço e Valores */}
+          <AccordionItem value="servico" className="border rounded-xl overflow-hidden bg-card shadow-sm">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <AlertTriangle className="h-4 w-4 text-primary" />
-                Ocorrência
+              <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary }}>
+                <DollarSign className="h-4 w-4" style={{ color: COLORS.primary }} />
+                Serviço e Pagamento
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-3">
               <div>
-                <Label className="text-xs">Problema Identificado (Relato do Cliente)</Label>
-                <Textarea className={fieldClass} rows={4} placeholder="Descreva o problema relatado pelo cliente..." value={problemaIdentificado} onChange={(e) => setProblemaIdentificado(e.target.value)} />
+                <Label className="text-xs" style={{ color: COLORS.primary }}>Peça Trocada</Label>
+                <Input className={fieldClass} placeholder="Qual peça foi substituída?" value={pecaTrocada} onChange={(e) => setPecaTrocada(e.target.value)} />
               </div>
               <div>
-                <Label className="text-xs">Serviço Realizado</Label>
-                <Textarea className={fieldClass} rows={4} placeholder="Descreva o serviço executado..." value={servicoRealizado} onChange={(e) => setServicoRealizado(e.target.value)} />
+                <Label className="text-xs" style={{ color: COLORS.primary }}>Peça a deixar com atenção</Label>
+                <Input className={fieldClass} placeholder="Ex: Correia desgastada" value={pecaAtencao} onChange={(e) => setPecaAtencao(e.target.value)} />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div>
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor da Peça</Label>
+                  <Input className={fieldClass} placeholder="R$ 0,00" value={valorPeca} onChange={(e) => setValorPeca(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor Pago</Label>
+                  <Input className={fieldClass} placeholder="R$ 0,00" value={valorPago} onChange={(e) => setValorPago(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs" style={{ color: COLORS.primary }}>Forma de Pagamento</Label>
+                <Input className={fieldClass} placeholder="Ex: PIX, Cartão, Dinheiro" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)} />
               </div>
             </AccordionContent>
           </AccordionItem>
 
-          {/* 6. Fotos */}
+          {/* 4. Fotos */}
           <AccordionItem value="fotos" className="border rounded-xl overflow-hidden bg-card shadow-sm">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <Camera className="h-4 w-4 text-primary" />
-                Fotos do Serviço {fotos.length > 0 && `(${fotos.length})`}
+              <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary }}>
+                <Camera className="h-4 w-4" style={{ color: COLORS.primary }} />
+                Fotos do Reparo {fotos.length > 0 && `(${fotos.length})`}
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
@@ -362,12 +206,12 @@ const Index = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* 7. Aprovação */}
+          {/* 5. Aprovação */}
           <AccordionItem value="aprovacao" className="border rounded-xl overflow-hidden bg-card shadow-sm">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <span className="flex items-center gap-2 text-sm font-semibold">
-                <PenTool className="h-4 w-4 text-primary" />
-                Aprovação (Assinatura)
+              <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: COLORS.primary }}>
+                <PenTool className="h-4 w-4" style={{ color: COLORS.primary }} />
+                Assinatura do Cliente
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
@@ -377,11 +221,12 @@ const Index = () => {
         </Accordion>
       </main>
 
-      {/* Fixed bottom CTA */}
+      {/* Botão fixo no final com cor primária e texto de destaque */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg p-4 z-50">
         <div className="max-w-lg mx-auto">
           <Button
             className="w-full h-12 text-base font-bold shadow-md"
+            style={{ backgroundColor: COLORS.primary, color: COLORS.accent }}
             onClick={handleGeneratePdf}
             disabled={loading}
           >
