@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"; // <-- Importado Textarea para a descrição
 import { Button } from "@/components/ui/button";
 import {
   FileDown,
@@ -22,12 +23,12 @@ import { generatePdf, type FormData } from "@/lib/generatePdf";
 import { useToast } from "@/hooks/use-toast";
 import cruztechLogo from "@/assets/cruztech-logo.jpg";
 
-// === DEFINA SUAS CORES DO LOGO AQUI (HEX) ===
+// === CORES DO LOGO ===
 const COLORS = {
-  primary: "#0A4B5E", // Azul Petróleo
-  accent: "#F9A826", // Laranja Vibrante
-  text: "#1A1A1A", // Texto Principal
-  background: "#F0F8FA", // Um tom muito claro de azul
+  primary: "#0A4B5E", 
+  accent: "#F9A826", 
+  text: "#1A1A1A", 
+  background: "#F0F8FA", 
 };
 
 const Index = () => {
@@ -39,6 +40,7 @@ const Index = () => {
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
   const [numSerie, setNumSerie] = useState("");
+  const [descricao, setDescricao] = useState(""); // <-- Novo state para Descrição
   const [pecaTrocada, setPecaTrocada] = useState("");
   const [pecaAtencao, setPecaAtencao] = useState("");
   const [valorPeca, setValorPeca] = useState("");
@@ -78,6 +80,7 @@ const Index = () => {
         marca,
         modelo,
         numSerie,
+        descricao, // <-- Adicionado ao PDF
         pecaTrocada,
         pecaAtencao,
         valorPeca,
@@ -167,6 +170,19 @@ const Index = () => {
               </span>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4 space-y-3">
+              
+              {/* CAMPO NOVO: Descrição */}
+              <div>
+                <Label className="text-xs" style={{ color: COLORS.primary }}>Descrição do Serviço</Label>
+                <Textarea 
+                  className={fieldClass} 
+                  rows={3} 
+                  placeholder="Descreva detalhadamente o serviço realizado..." 
+                  value={descricao} 
+                  onChange={(e) => setDescricao(e.target.value)} 
+                />
+              </div>
+
               <div>
                 <Label className="text-xs" style={{ color: COLORS.primary }}>Peça Trocada</Label>
                 <Input className={fieldClass} placeholder="Qual peça foi substituída?" value={pecaTrocada} onChange={(e) => setPecaTrocada(e.target.value)} />
@@ -182,7 +198,7 @@ const Index = () => {
                   <Input className={fieldClass} placeholder="R$ 0,00" value={valorPeca} onChange={(e) => setValorPeca(e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor total</Label>
+                  <Label className="text-xs" style={{ color: COLORS.primary }}>Valor Pago</Label>
                   <Input className={fieldClass} placeholder="R$ 0,00" value={valorPago} onChange={(e) => setValorPago(e.target.value)} />
                 </div>
               </div>

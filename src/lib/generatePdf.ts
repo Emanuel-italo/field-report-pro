@@ -5,6 +5,7 @@ export interface FormData {
   marca: string;
   modelo: string;
   numSerie: string;
+  descricao: string; // <-- NOVO CAMPO
   pecaTrocada: string;
   pecaAtencao: string;
   valorPeca: string;
@@ -15,11 +16,8 @@ export interface FormData {
 }
 
 // === DEFINA SUAS CORES DO LOGO AQUI (RGB) ===
-// Exemplo: Azul Petróleo (#0A4B5E)
 const HEADER_COLOR: [number, number, number] = [10, 75, 94]; 
-// Texto principal (Quase Preto #1A1A1A)
 const TEXT_COLOR: [number, number, number] = [26, 26, 26];
-// Um tom muito claro da cor primária para fundo de campos (#F0F8FA)
 const LIGHT_BG: [number, number, number] = [240, 248, 250];
 
 export async function generatePdf(data: FormData, logoBase64: string | null) {
@@ -128,12 +126,25 @@ export async function generatePdf(data: FormData, logoBase64: string | null) {
 
   // === SERVIÇO ===
   drawHeader("Detalhes do Serviço");
+  
+  // Bloco de Descrição (pode ter várias linhas)
+  checkPageBreak(15);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("Descrição do Serviço:", margin + 2, y + 4);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  const descLines = doc.splitTextToSize(data.descricao || "-", contentWidth - 4);
+  checkPageBreak(descLines.length * 4 + 2);
+  doc.text(descLines, margin + 2, y + 3);
+  y += descLines.length * 4 + 6;
+
   drawRow("Peça Trocada", data.pecaTrocada, 40);
   drawRow("Deixar c/ Atenção", data.pecaAtencao, 40);
 
   // === VALORES E PAGAMENTO ===
   drawHeader("Valores e Pagamento");
-  drawTwoColumns("Valor da Peça", data.valorPeca, "Valor total", data.valorPago);
+  drawTwoColumns("Valor da Peça", data.valorPeca, "Valor Pago", data.valorPago);
   drawRow("Forma de Pag.", data.formaPagamento, 40);
 
   // === FOTOS ===
