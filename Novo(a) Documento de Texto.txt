@@ -11,33 +11,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, onPhotosChange }) => 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    // Converte os arquivos para uma lista e filtra apenas imagens
-    const fileArray = Array.from(files).filter(file => file.type.startsWith("image/"));
-    
-    // Usamos Promises para aguardar TODAS as imagens serem lidas antes de salvar
-    const newPhotosPromises = fileArray.map((file) => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          resolve(event.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          onPhotosChange([...photos, result]);
+        }
+      };
+      reader.readAsDataURL(file);
     });
-
-    // Aguarda o processamento de todas as fotos selecionadas
-    const newBase64Photos = await Promise.all(newPhotosPromises);
-    
-    // Atualiza o estado uma única vez, juntando as antigas com as novas
-    onPhotosChange([...photos, ...newBase64Photos]);
-
-    // IMPORTANTE: Limpa o input. Sem isso, se você apagar a foto e tentar
-    // selecionar a MESMA foto de novo, o celular ignora o clique.
-    e.target.value = "";
   };
 
   const removePhoto = (index: number) => {
@@ -66,14 +52,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, onPhotosChange }) => 
           Galeria
         </Button>
       </div>
-      
       <input
         ref={cameraRef}
         type="file"
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={handleFiles}
+        onChange={(e) => handleFiles(e.target.files)}
       />
       <input
         ref={galleryRef}
@@ -81,9 +66,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, onPhotosChange }) => 
         accept="image/*"
         multiple
         className="hidden"
-        onChange={handleFiles}
+        onChange={(e) => handleFiles(e.target.files)}
       />
-      
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {photos.map((photo, index) => (
